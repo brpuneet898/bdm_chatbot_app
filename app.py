@@ -6,6 +6,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 os.environ["GROQ_API_KEY"] = "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"
+
 @st.cache_resource
 def load_model():
     return ChatGroq(temperature=0.8, model="llama3-8b-8192")
@@ -50,11 +51,25 @@ if pdf_files:
         
     user_input = st.text_input("Pose your Questions:")
 
+    # if user_input:
+    #     response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
+    #     answer = response["answer"]
+    #     st.session_state["chat_history"].append((user_input, answer))
+    #     st.write("Chatbot:", answer)
+
     if user_input:
-        response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
-        answer = response["answer"]
-        st.session_state["chat_history"].append((user_input, answer))
-        st.write("Chatbot:", answer)
+        if user_input.lower() == "stop":
+            st.write("Chatbot: Goodbye!")
+            st.stop()  # Stop the app if the user says 'stop'
+        else:
+            response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
+            answer = response["answer"]
+            st.session_state["chat_history"].append((user_input, answer))
+
+            # Display full conversation history
+            for i, (question, reply) in enumerate(st.session_state["chat_history"], 1):
+                st.write(f"Q{i}: {question}")
+                st.write(f"Chatbot: {reply}")
 
 else:
     st.write("Please upload a PDF document to start.")
