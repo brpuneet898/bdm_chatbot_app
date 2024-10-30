@@ -5,18 +5,30 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
+
 os.environ["GROQ_API_KEY"] = "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"
 
 @st.cache_resource
 def load_model():
     return ChatGroq(temperature=0.8, model="llama3-8b-8192")
 
-model = load_model()
+# model = load_model()
+
+# @st.cache_data
+# def load_pdf_text(pdf_path):
+#     loader = PyPDFLoader(pdf_path)
+#     pages = loader.load_and_split()
+#     return [page.page_content for page in pages]
+
 @st.cache_data
-def load_pdf_text(pdf_path):
-    loader = PyPDFLoader(pdf_path)
-    pages = loader.load_and_split()
-    return [page.page_content for page in pages]
+def load_hidden_pdfs(directory="hidden_docs"):
+    all_texts = []
+    for filename in os.listdir(directory):
+        if filename.endswith(".pdf"):
+            loader = PyPDFLoader(os.path.join(directory, filename))
+            pages = loader.load_and_split()
+            all_texts.extend([page.page_content for page in pages])
+    return all_texts
 
 @st.cache_resource
 def create_vector_store(document_texts):
@@ -26,8 +38,9 @@ def create_vector_store(document_texts):
 st.title("BDM Chatbot")
 st.write("Upload your PDF documents to ask specific questions.")
 
-pdf_files = st.file_uploader("Upload PDF(s)", type="pdf", accept_multiple_files=True)
+# pdf_files = st.file_uploader("Upload PDF(s)", type="pdf", accept_multiple_files=True)
 
+# v1 here
 # if pdf_file is not None:
 #     with open("uploaded_document.pdf", "wb") as f:
 #         f.write(pdf_file.getbuffer())
@@ -57,19 +70,29 @@ if pdf_files:
     #     st.session_state["chat_history"].append((user_input, answer))
     #     st.write("Chatbot:", answer)
 
-    if user_input:
-        if user_input.lower() == "stop":
-            st.write("Chatbot: Goodbye!")
-            st.stop()  # Stop the app if the user says 'stop'
-        else:
-            response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
-            answer = response["answer"]
-            st.session_state["chat_history"].append((user_input, answer))
+    # if user_input:
+    #     if user_input.lower() == "stop":
+    #         st.write("Chatbot: Goodbye!")
+    #         st.stop()  
+    #     else:
+    #         response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
+    #         answer = response["answer"]
+    #         st.session_state["chat_history"].append((user_input, answer))
+    #         for i, (question, reply) in enumerate(st.session_state["chat_history"], 1):
+    #             st.write(f"Q{i}: {question}")
+    #             st.write(f"Chatbot: {reply}")
 
-            # Display full conversation history
-            for i, (question, reply) in enumerate(st.session_state["chat_history"], 1):
-                st.write(f"Q{i}: {question}")
-                st.write(f"Chatbot: {reply}")
+if user_input:
+    if user_input.lower() == "stop":
+        st.write("Chatbot: Goodbye!")
+        st.stop()
+    else:
+        response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
+        answer = response["answer"]
+        st.session_state["chat_history"].append((user_input, answer))
+        for i, (question, reply) in enumerate(st.session_state["chat_history"], 1):
+            st.write(f"Q{i}: {question}")
+            st.write(f"Chatbot: {reply}")
 
-else:
-    st.write("Please upload a PDF document to start.")
+# else:
+#     st.write("Please upload a PDF document to start.")
