@@ -25,7 +25,7 @@ def create_vector_store(document_texts):
 st.title("BDM Chatbot")
 st.write("Upload your PDF documents to ask specific questions.")
 
-pdf_file = st.file_uploader("Upload PDF(s)", type="pdf", accept_multiple_files=True)
+pdf_files = st.file_uploader("Upload PDF(s)", type="pdf", accept_multiple_files=True)
 
 # if pdf_file is not None:
 #     with open("uploaded_document.pdf", "wb") as f:
