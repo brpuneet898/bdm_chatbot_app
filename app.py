@@ -48,21 +48,26 @@ st.write("Upload your PDF documents to ask specific questions.")
 #     vector_store = create_vector_store(document_texts)
 #     retrieval_chain = ConversationalRetrievalChain.from_llm(model, retriever=vector_store.as_retriever())
 
-if pdf_files:
-    all_document_texts = []
-    for pdf_file in pdf_files:
-        with open(pdf_file.name, "wb") as f:
-            f.write(pdf_file.getbuffer())
-        document_texts = load_pdf_text(pdf_file.name)
-        all_document_texts.extend(document_texts)
+# if pdf_files:
+#     all_document_texts = []
+#     for pdf_file in pdf_files:
+#         with open(pdf_file.name, "wb") as f:
+#             f.write(pdf_file.getbuffer())
+#         document_texts = load_pdf_text(pdf_file.name)
+#         all_document_texts.extend(document_texts)
 
-    vector_store = create_vector_store(all_document_texts)
-    retrieval_chain = ConversationalRetrievalChain.from_llm(model, retriever=vector_store.as_retriever())
+#     vector_store = create_vector_store(all_document_texts)
+#     retrieval_chain = ConversationalRetrievalChain.from_llm(model, retriever=vector_store.as_retriever())
+
+model = load_model()
+document_texts = load_hidden_pdfs()
+vector_store = create_vector_store(document_texts)
+retrieval_chain = ConversationalRetrievalChain.from_llm(model, retriever=vector_store.as_retriever())
     
-    if "chat_history" not in st.session_state:
-        st.session_state["chat_history"] = []
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
         
-    user_input = st.text_input("Pose your Questions:")
+user_input = st.text_input("Pose your Questions:")
 
     # if user_input:
     #     response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
