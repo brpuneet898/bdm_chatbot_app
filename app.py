@@ -36,7 +36,7 @@ def create_vector_store(document_texts):
     return FAISS.from_texts(document_texts, embedder)
 
 st.title("BDM Chatbot")
-st.write("Upload your PDF documents to ask specific questions.")
+st.write("Ask questions directly based on the preloaded BDM documents.")
 
 # pdf_files = st.file_uploader("Upload PDF(s)", type="pdf", accept_multiple_files=True)
 
