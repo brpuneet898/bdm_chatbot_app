@@ -25,16 +25,29 @@ def create_vector_store(document_texts):
 st.title("BDM Chatbot")
 st.write("Upload your PDF documents to ask specific questions.")
 
-pdf_file = st.file_uploader("Upload PDF", type="pdf")
+pdf_file = st.file_uploader("Upload PDF(s)", type="pdf", accept_multiple_files=True)
 
-if pdf_file is not None:
-    with open("uploaded_document.pdf", "wb") as f:
-        f.write(pdf_file.getbuffer())
-    document_texts = load_pdf_text("uploaded_document.pdf")
-    vector_store = create_vector_store(document_texts)
+# if pdf_file is not None:
+#     with open("uploaded_document.pdf", "wb") as f:
+#         f.write(pdf_file.getbuffer())
+#     document_texts = load_pdf_text("uploaded_document.pdf")
+#     vector_store = create_vector_store(document_texts)
+#     retrieval_chain = ConversationalRetrievalChain.from_llm(model, retriever=vector_store.as_retriever())
+
+if pdf_files:
+    all_document_texts = []
+    for pdf_file in pdf_files:
+        with open(pdf_file.name, "wb") as f:
+            f.write(pdf_file.getbuffer())
+        document_texts = load_pdf_text(pdf_file.name)
+        all_document_texts.extend(document_texts)
+
+    vector_store = create_vector_store(all_document_texts)
     retrieval_chain = ConversationalRetrievalChain.from_llm(model, retriever=vector_store.as_retriever())
+    
     if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []
+        
     user_input = st.text_input("Pose your Questions:")
 
     if user_input:
