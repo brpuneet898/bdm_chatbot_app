@@ -196,9 +196,12 @@ def save_session_to_supabase(email, name, chat_history):
             "question": question,
             "answer": answer,
         }
+        # Insert data into Supabase
         response = supabase.table('chat_sessions').insert(data).execute()
-        if response.status_code != 201:
-            st.error(f"Error saving session data to Supabase: {response.error_message}")
+        
+        # Check if the insert was successful
+        if response.error:
+            st.error(f"Error saving session data to Supabase: {response.error}")
             return False
     return True
 
@@ -260,6 +263,7 @@ if st.session_state["email_validated"]:
             for i, (question, reply) in enumerate(st.session_state["chat_history"], 1):
                 st.write(f"Q{i}: {question}")
                 st.write(f"Chatbot: {reply}")
+
 
 
 # version 5 - added download feature - with custom embeedings that doesn't work
