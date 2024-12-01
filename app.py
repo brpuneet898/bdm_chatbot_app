@@ -409,34 +409,30 @@ def save_session_to_github(session_data):
     timestamp = session_data["timestamp"]
     filename = f"session_data/{timestamp}.json"
     
-    # Check if the session_data directory exists, if not create it
+    # Headers for GitHub API authentication
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
     
-    # Check if the file exists on GitHub
-    response = requests.get(GITHUB_API_URL + timestamp + ".json", headers=headers)
-    
-    # If the file doesn't exist, create a new one
-    if response.status_code == 404:
-        # Convert session data to JSON string
-        session_json = json.dumps(session_data, indent=4)
-        
-        # Create the file on GitHub
-        data = {
-            "message": f"Add session data for {timestamp}",
-            "content": session_json.encode("utf-8").decode("utf-8")  # GitHub expects the content to be base64-encoded string
-        }
-        
-        response = requests.put(GITHUB_API_URL + timestamp + ".json", headers=headers, json=data)
-        if response.status_code == 201:
-            st.write(f"Session data saved to GitHub as {timestamp}.json")
-        else:
-            st.write(f"Error saving session data to GitHub: {response.text}")
-    else:
-        st.write(f"Session data with timestamp {timestamp}.json already exists on GitHub.")
+    # Check if the session_data directory exists on GitHub
+    # If not, create the directory by uploading a new file
+    session_json = json.dumps(session_data, indent=4)
 
+    # Data to be sent to GitHub API in base64 format
+    data = {
+        "message": f"Add session data for {timestamp}",
+        "content": session_json.encode("utf-8").decode("utf-8")  # GitHub expects the content to be base64-encoded string
+    }
+
+    # Create or update the file on GitHub
+    response = requests.put(f"https://api.github.com/repos/brpuneet898/bdm_chatbot_app/contents/{filename}", headers=headers, json=data)
+    
+    if response.status_code == 201:
+        st.write(f"Session data saved to GitHub as {filename}")
+    else:
+        st.write(f"Error saving session data to GitHub: {response.text}")
+        
 # Streamlit UI code
 st.title("BDM Chatbot")
 st.write("Ask questions directly based on the preloaded BDM documents.")
