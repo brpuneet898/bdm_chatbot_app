@@ -57,24 +57,23 @@
 # version 2 - without custom embeddings 
 
 import os
-import json
-import time
 import streamlit as st
+import re
+import json
+from datetime import datetime
 from langchain_groq import ChatGroq
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
-import re  # For email validation
 
+# Set your Groq API key
 os.environ["GROQ_API_KEY"] = "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"
 
-# Load model
 @st.cache_resource
 def load_model():
     return ChatGroq(temperature=0.8, model="llama3-8b-8192")
 
-# Load documents
 @st.cache_data
 def load_hidden_pdfs(directory="hidden_docs"):
     all_texts = []
@@ -85,86 +84,73 @@ def load_hidden_pdfs(directory="hidden_docs"):
             all_texts.extend([page.page_content for page in pages])
     return all_texts
 
-# Create vector store
 @st.cache_resource
 def create_vector_store(document_texts):
     embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     return FAISS.from_texts(document_texts, embedder)
 
-# Function to validate email
+# Email validation regex for the specified format
 def is_valid_email(email):
-    pattern = r"^\d{2}f\d{7}@ds\.study\.iitm\.ac\.in$"
-    return re.match(pattern, email) is not None
+    email_regex = r"^\d{2}f\d{8}@ds\.study\.iitm\.ac\.in$"
+    return re.match(email_regex, email) is not None
 
 st.title("BDM Chatbot")
 st.write("Ask questions directly based on the preloaded BDM documents.")
 
-# Load model and documents
+# Load the model and document text
 model = load_model()
 document_texts = load_hidden_pdfs()
 vector_store = create_vector_store(document_texts)
 retrieval_chain = ConversationalRetrievalChain.from_llm(model, retriever=vector_store.as_retriever())
 
-# Session state for chat history
+# Initialize session states
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
+if "email_validated" not in st.session_state:
+    st.session_state["email_validated"] = False
 
-# Initialize user interaction
-if "email_verified" not in st.session_state:
-    st.session_state["email_verified"] = False
-
-if not st.session_state["email_verified"]:
-    # Ask for email ID and optional name
-    email = st.text_input("Enter your email ID (XXfXXXXXXX@ds.study.iitm.ac.in):")
+# User input for email and name
+if not st.session_state["email_validated"]:
+    email = st.text_input("Enter your email (format: XXfXXXXXXX@ds.study.iitm.ac.in):")
     name = st.text_input("Enter your name (optional):")
-
-    # Validate email
+    
+    # Validate email format
     if email and is_valid_email(email):
-        st.session_state["email_verified"] = True
-        st.session_state["user_email"] = email
-        st.session_state["user_name"] = name if name else "Anonymous"
-        st.write("Email validated. You can now ask questions.")
+        st.session_state["email_validated"] = True
+        st.success("Email validated successfully! You can now ask your questions.")
     elif email:
-        st.error("Invalid email format! Please ensure your email is in the format XXfXXXXXXX@ds.study.iitm.ac.in.")
-else:
-    # User input and chatbot interaction
-    user_input = st.text_input(f"Hi {st.session_state['user_name']}! Pose your questions:")
+        st.error("Invalid email format. Please enter a valid email.")
 
+# Allow questions only if email is validated
+if st.session_state["email_validated"]:
+    user_input = st.text_input("Pose your Questions:")
+    
     if user_input:
         if user_input.lower() == "stop":
             st.write("Chatbot: Goodbye!")
-            
-            # Save session data as JSON
+            # Allow the user to download session data as JSON when they say "stop"
             session_data = {
-                "email": st.session_state["user_email"],
-                "name": st.session_state["user_name"],
+                "email": email,
+                "name": name,
                 "chat_history": st.session_state["chat_history"]
             }
-            timestamp = time.strftime("%Y%m%d-%H%M%S")
-            file_name = f"session_data_{timestamp}.json"
-            
-            with open(file_name, "w") as json_file:
-                json.dump(session_data, json_file, indent=4)
-
-            # Provide download link for the file
-            with open(file_name, "rb") as f:
-                st.download_button(
-                    label="Download Session Data",
-                    data=f,
-                    file_name=file_name,
-                    mime="application/json"
-                )
-            
-            st.stop()  # Stop the app after the "stop" command
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"session_data_{timestamp}.json"
+            st.download_button(
+                label="Download Session Data",
+                data=json.dumps(session_data, indent=4),
+                file_name=filename,
+                mime="application/json"
+            )
+            st.stop()
         else:
             response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
             answer = response["answer"]
             st.session_state["chat_history"].append((user_input, answer))
-
-            # Display chat history
             for i, (question, reply) in enumerate(st.session_state["chat_history"], 1):
                 st.write(f"Q{i}: {question}")
                 st.write(f"Chatbot: {reply}")
+
 
 
 
