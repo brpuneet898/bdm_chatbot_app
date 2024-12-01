@@ -57,29 +57,24 @@
 # version 2 - without custom embeddings 
 
 import os
-import re
 import json
+import time
 import streamlit as st
-from datetime import datetime
 from langchain_groq import ChatGroq
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
-from supabase import create_client, Client
+import re  # For email validation
 
-# Supabase setup
-url = "https://armzsxwnhybsgedffijs.supabase.co"
-api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybXpzeHduaHlic2dlZGZmaWpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMwODcxMzEsImV4cCI6MjA0ODY2MzEzMX0.g7Ty0qNFCVJiEp38IQ_Uw9yEn4jzA67XPsLCmQ8f26o"
-supabase: Client = create_client(url, api_key)
-
-# Groq API Key
 os.environ["GROQ_API_KEY"] = "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"
 
+# Load model
 @st.cache_resource
 def load_model():
     return ChatGroq(temperature=0.8, model="llama3-8b-8192")
 
+# Load documents
 @st.cache_data
 def load_hidden_pdfs(directory="hidden_docs"):
     all_texts = []
@@ -90,79 +85,87 @@ def load_hidden_pdfs(directory="hidden_docs"):
             all_texts.extend([page.page_content for page in pages])
     return all_texts
 
+# Create vector store
 @st.cache_resource
 def create_vector_store(document_texts):
     embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     return FAISS.from_texts(document_texts, embedder)
 
-# Email validation regex for the specific pattern
+# Function to validate email
 def is_valid_email(email):
-    return bool(re.match(r'^\d{2}f\d{7}@ds\.study\.iitm\.ac\.in$', email))
+    pattern = r"^\d{2}f\d{8}@ds\.study\.iitm\.ac\.in$"
+    return re.match(pattern, email) is not None
 
-# Function to save chat history to Supabase
-def save_to_supabase(session_data):
-    table_name = "chat_sessions"
-    response = supabase.table(table_name).insert(session_data).execute()
-    if response.status_code == 201:
-        st.success("Session saved to Supabase.")
-    else:
-        st.error("Error saving session to Supabase.")
-
-# Streamlit UI
 st.title("BDM Chatbot")
 st.write("Ask questions directly based on the preloaded BDM documents.")
 
-# Input fields for email and name
-email = st.text_input("Enter your Email (XXfXXXXXXX@ds.study.iitm.ac.in):")
-name = st.text_input("Enter your Name (Optional):")
+# Load model and documents
+model = load_model()
+document_texts = load_hidden_pdfs()
+vector_store = create_vector_store(document_texts)
+retrieval_chain = ConversationalRetrievalChain.from_llm(model, retriever=vector_store.as_retriever())
 
-# Button to proceed after email validation
-if email and not is_valid_email(email):
-    st.error("Invalid email format! Please enter a valid email.")
+# Session state for chat history
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
+
+# Initialize user interaction
+if "email_verified" not in st.session_state:
+    st.session_state["email_verified"] = False
+
+if not st.session_state["email_verified"]:
+    # Ask for email ID and optional name
+    email = st.text_input("Enter your email ID (XXfXXXXXXX@ds.study.iitm.ac.in):")
+    name = st.text_input("Enter your name (optional):")
+
+    # Validate email
+    if email and is_valid_email(email):
+        st.session_state["email_verified"] = True
+        st.session_state["user_email"] = email
+        st.session_state["user_name"] = name if name else "Anonymous"
+        st.write("Email validated. You can now ask questions.")
+    elif email:
+        st.error("Invalid email format! Please ensure your email is in the format XXfXXXXXXX@ds.study.iitm.ac.in.")
 else:
-    # User is allowed to interact with the chatbot after email validation
-    model = load_model()
-    document_texts = load_hidden_pdfs()
-    vector_store = create_vector_store(document_texts)
-    retrieval_chain = ConversationalRetrievalChain.from_llm(model, retriever=vector_store.as_retriever())
-    
-    if "chat_history" not in st.session_state:
-        st.session_state["chat_history"] = []
-
-    user_input = st.text_input("Pose your Questions:")
+    # User input and chatbot interaction
+    user_input = st.text_input(f"Hi {st.session_state['user_name']}! Pose your questions:")
 
     if user_input:
         if user_input.lower() == "stop":
-            # Enable download after stop
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"session_data_{timestamp}.json"
-            file_path = f"/mnt/data/{filename}"
-            
-            # Save chat history to file
-            with open(file_path, "w") as f:
-                json.dump(st.session_state["chat_history"], f)
-                
-            st.download_button(label="Download Session Data", data=open(file_path, "rb"), file_name=filename)
-            
-            # Save session data to Supabase
-            session_data = {
-                "email": email,
-                "name": name,
-                "chat_history": st.session_state["chat_history"],
-                "timestamp": timestamp
-            }
-            save_to_supabase(session_data)
-            
             st.write("Chatbot: Goodbye!")
-            st.stop()
+            
+            # Save session data as JSON
+            session_data = {
+                "email": st.session_state["user_email"],
+                "name": st.session_state["user_name"],
+                "chat_history": st.session_state["chat_history"]
+            }
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            file_name = f"session_data_{timestamp}.json"
+            
+            with open(file_name, "w") as json_file:
+                json.dump(session_data, json_file, indent=4)
 
+            # Provide download link for the file
+            with open(file_name, "rb") as f:
+                st.download_button(
+                    label="Download Session Data",
+                    data=f,
+                    file_name=file_name,
+                    mime="application/json"
+                )
+            
+            st.stop()  # Stop the app after the "stop" command
         else:
             response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
             answer = response["answer"]
             st.session_state["chat_history"].append((user_input, answer))
+
+            # Display chat history
             for i, (question, reply) in enumerate(st.session_state["chat_history"], 1):
                 st.write(f"Q{i}: {question}")
                 st.write(f"Chatbot: {reply}")
+
 
 
 # version 5 - added download feature
