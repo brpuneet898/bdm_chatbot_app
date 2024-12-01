@@ -109,19 +109,18 @@ if "chat_history" not in st.session_state:
 if "email_validated" not in st.session_state:
     st.session_state["email_validated"] = False
 
-# User input for email and name
-if not st.session_state["email_validated"]:
-    email = st.text_input("Enter your email (format: XXfXXXXXXX@ds.study.iitm.ac.in):")
-    name = st.text_input("Enter your name (optional):")
-    
-    # Validate email format
-    if email and is_valid_email(email):
-        st.session_state["email_validated"] = True
-        st.success("Email validated successfully! You can now ask your questions.")
-    elif email:
-        st.error("Invalid email format. Please enter a valid email.")
+# Display email and name input fields
+email = st.text_input("Enter your email (format: XXfXXXXXXX@ds.study.iitm.ac.in):")
+name = st.text_input("Enter your name (optional):")
 
-# Allow questions only if email is validated
+# Validate email format
+if email and is_valid_email(email):
+    st.session_state["email_validated"] = True
+    st.success("Email validated successfully! You can now ask your questions.")
+elif email:
+    st.error("Invalid email format. Please enter a valid email.")
+
+# Show the question input only if email is validated
 if st.session_state["email_validated"]:
     user_input = st.text_input("Pose your Questions:")
     
@@ -144,9 +143,12 @@ if st.session_state["email_validated"]:
             )
             st.stop()
         else:
+            # Process the question and answer
             response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
             answer = response["answer"]
             st.session_state["chat_history"].append((user_input, answer))
+            
+            # Display the chat history
             for i, (question, reply) in enumerate(st.session_state["chat_history"], 1):
                 st.write(f"Q{i}: {question}")
                 st.write(f"Chatbot: {reply}")
