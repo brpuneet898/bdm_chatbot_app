@@ -419,30 +419,37 @@ def save_session_data(email, name, questions_and_answers):
     return save_path
 
 def send_email_with_attachment(recipient_email, attachment_path):
-    sender_email = "21f3002005@ds.study.iitm.ac.in"  
-    sender_password = "etfn7vp9" 
+    sender_email = "brpuneet898@gmail.com"  # Your email address
+    sender_password = "maaswamiji091220"  # Your email password (or app-specific password)
 
     subject = "Session Data"
     body = "Please find attached the session data."
+
+    # Prepare the email
     msg = MIMEMultipart()
     msg["From"] = sender_email
     msg["To"] = recipient_email
     msg["Subject"] = subject
 
     msg.attach(MIMEText(body, "plain"))
+
+    # Attach the JSON file
     with open(attachment_path, "rb") as attachment_file:
         attach_part = MIMEApplication(attachment_file.read(), _subtype="json")
         attach_part.add_header("Content-Disposition", "attachment", filename=os.path.basename(attachment_path))
         msg.attach(attach_part)
 
+    # Send the email
     try:
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, recipient_email, msg.as_string())
         print("Email sent successfully!")
+        st.write("Email sent successfully! Check your inbox.")
     except Exception as e:
         print(f"Error sending email: {e}")
+        st.write(f"Error sending email: {e}")
 
 st.title("BDM Chatbot")
 st.write("Ask questions directly based on the preloaded BDM documents.")
