@@ -342,7 +342,7 @@
 # else:
 #     st.write("Please enter your email ID to proceed.")
 
-# version 5 - added github details 
+# version 5 - added download feature
 
 import os
 import re
@@ -354,14 +354,9 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
-import requests  # For GitHub API interaction
 
-# GitHub Repository details
-GITHUB_API_URL = "https://api.github.com/repos/brpuneet898/bdm_chatbot_app/contents/session_data/"
-GITHUB_TOKEN = "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"  # Use a GitHub token for authentication
-
+# Your API Key (ensure it's handled securely, not hardcoded in production)
 os.environ["GROQ_API_KEY"] = "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"
-
 
 @st.cache_resource
 def load_model():
@@ -381,7 +376,7 @@ def load_hidden_pdfs(directory="hidden_docs"):
 def create_and_save_vector_store(document_texts, save_path="faiss_index"):
     embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     vector_store = FAISS.from_texts(document_texts, embedder)
-    vector_store.save_local(save_path) 
+    vector_store.save_local(save_path)
     return vector_store
 
 @st.cache_resource
@@ -404,36 +399,22 @@ def is_valid_email(email):
     email_pattern = r"^\d{2}f\d{7}@ds\.study\.iitm\.ac\.in$"
     return bool(re.match(email_pattern, email))
 
-# Function to save session data to GitHub
-def save_session_to_github(session_data):
-    timestamp = session_data["timestamp"]
-    filename = f"session_data/{timestamp}.json"
-    
-    # Headers for GitHub API authentication
-    headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json"
+def save_session_data(email, name, questions_and_answers):
+    # Create timestamped filename
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    session_data = {
+        "email": email,
+        "name": name,
+        "timestamp": timestamp,
+        "questions_and_answers": questions_and_answers
     }
     
-    # Check if the session_data directory exists on GitHub
-    # If not, create the directory by uploading a new file
-    session_json = json.dumps(session_data, indent=4)
+    save_path = f"session_data_{timestamp}.json"
+    with open(save_path, "w") as file:
+        json.dump(session_data, file, indent=4)
 
-    # Data to be sent to GitHub API in base64 format
-    data = {
-        "message": f"Add session data for {timestamp}",
-        "content": session_json.encode("utf-8").decode("utf-8")  # GitHub expects the content to be base64-encoded string
-    }
+    return save_path
 
-    # Create or update the file on GitHub
-    response = requests.put(f"https://api.github.com/repos/brpuneet898/bdm_chatbot_app/contents/{filename}", headers=headers, json=data)
-    
-    if response.status_code == 201:
-        st.write(f"Session data saved to GitHub as {filename}")
-    else:
-        st.write(f"Error saving session data to GitHub: {response.text}")
-        
-# Streamlit UI code
 st.title("BDM Chatbot")
 st.write("Ask questions directly based on the preloaded BDM documents.")
 
@@ -460,15 +441,16 @@ if email:
         if user_input:
             if user_input.lower() == "stop":
                 st.write("Chatbot: Goodbye!")
-                # Save session data to GitHub
-                session_data = {
-                    "email": email,
-                    "name": name,
-                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "questions_and_answers": st.session_state["chat_history"]
-                }
-                save_session_to_github(session_data)
-                st.stop()
+                # Save session data with timestamped filename
+                session_file = save_session_data(email, name, st.session_state["chat_history"])
+
+                # Provide download link for session data
+                with open(session_file, "rb") as file:
+                    st.download_button("Download Session Data", file, file_name=session_file)
+
+                st.session_state["chat_history"] = []  # Reset chat history after saving
+                st.stop()  # End the app session
+                
             else:
                 response = retrieval_chain.invoke({"question": user_input, "chat_history": st.session_state["chat_history"]})
                 answer = response["answer"]
