@@ -358,7 +358,7 @@ import requests  # For GitHub API interaction
 
 # GitHub Repository details
 GITHUB_API_URL = "https://api.github.com/repos/brpuneet898/bdm_chatbot_app/contents/session_data/"
-GITHUB_TOKEN = "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"  # Use a GitHub token for authentication
+GITHUB_TOKEN = "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"  # Use a GitHub token for authentication
 
 os.environ["GROQ_API_KEY"] = "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"
 
