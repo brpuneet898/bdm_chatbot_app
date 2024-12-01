@@ -93,7 +93,7 @@ def create_vector_store(document_texts):
 
 # Function to validate email
 def is_valid_email(email):
-    pattern = r"^\d{2}f\d{8}@ds\.study\.iitm\.ac\.in$"
+    pattern = r"^\d{2}f\d{7}@ds\.study\.iitm\.ac\.in$"
     return re.match(pattern, email) is not None
 
 st.title("BDM Chatbot")
