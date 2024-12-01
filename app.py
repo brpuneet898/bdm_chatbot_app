@@ -197,10 +197,14 @@ def save_session_to_supabase(email, name, chat_history):
             "answer": answer,
         }
         # Insert data into Supabase
-        response = supabase.table('chat_sessions').insert(data).execute()
-        
+        response = (
+            supabase.table("chat_sessions")
+            .insert(data)
+            .execute()
+        )
+
         # Check if the insert was successful
-        if response.error:
+        if response.status_code != 201:
             st.error(f"Error saving session data to Supabase: {response.error}")
             return False
     return True
@@ -238,11 +242,11 @@ if st.session_state["email_validated"]:
                 "name": name,
                 "chat_history": st.session_state["chat_history"]
             }
-            
+
             # Save session data to Supabase
             if save_session_to_supabase(email, name, st.session_state["chat_history"]):
                 st.success("Session data successfully saved to Supabase!")
-            
+
             # Allow the user to download session data as JSON when they say "stop"
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"session_data_{timestamp}.json"
