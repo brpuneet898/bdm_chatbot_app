@@ -188,7 +188,6 @@ def is_valid_email(email):
 
 # Save session data (question and answer pairs) to Supabase
 def save_session_to_supabase(email, name, chat_history):
-    # Insert each question-answer pair as a new row in Supabase
     for question, answer in chat_history:
         data = {
             "email": email,
@@ -197,15 +196,11 @@ def save_session_to_supabase(email, name, chat_history):
             "answer": answer,
         }
         # Insert data into Supabase
-        response = (
-            supabase.table("chat_sessions")
-            .insert(data)
-            .execute()
-        )
+        response = supabase.table("chat_sessions").insert(data).execute()
 
-        # Check if the insert was successful
-        if response.status_code != 201:
-            st.error(f"Error saving session data to Supabase: {response.error}")
+        # Check if response has errors (if any)
+        if "error" in response:
+            st.error(f"Error saving session data to Supabase: {response['error']['message']}")
             return False
     return True
 
@@ -267,7 +262,6 @@ if st.session_state["email_validated"]:
             for i, (question, reply) in enumerate(st.session_state["chat_history"], 1):
                 st.write(f"Q{i}: {question}")
                 st.write(f"Chatbot: {reply}")
-
 
 
 # version 5 - added download feature - with custom embeedings that doesn't work
