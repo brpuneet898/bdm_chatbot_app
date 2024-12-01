@@ -277,7 +277,7 @@ def get_vector_store(document_texts, save_path="faiss_index"):
         return create_and_save_vector_store(document_texts, save_path)
 
 def is_valid_email(email):
-    email_pattern = r"^\d{2}f\d{8}@ds\.study\.iitm\.ac\.in$"
+    email_pattern = r"^\d{2}f\d{7}@ds\.study\.iitm\.ac\.in$"
     return bool(re.match(email_pattern, email))
 
 def save_session_data(email, name, questions_and_answers):
@@ -326,7 +326,6 @@ if email:
         if user_input:
             if user_input.lower() == "stop":
                 st.write("Chatbot: Goodbye!")
-                # Save session data when the user stops the conversation
                 save_session_data(email, name, st.session_state["chat_history"])
                 st.stop()
             else:
@@ -338,7 +337,7 @@ if email:
                     st.write(f"Chatbot: {reply}")
 
     else:
-        st.write("Invalid email. Please use the format: XXfXXXXXXXX@ds.study.iitm.ac.in")
+        st.write("Invalid email. Please use the format: XXfXXXXXXX@ds.study.iitm.ac.in")
 
 else:
     st.write("Please enter your email ID to proceed.")
