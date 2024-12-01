@@ -186,20 +186,21 @@ def is_valid_email(email):
     email_regex = r"^\d{2}f\d{7}@ds\.study\.iitm\.ac\.in$"
     return re.match(email_regex, email) is not None
 
-# Save session data to Supabase
+# Save session data (question and answer pairs) to Supabase
 def save_session_to_supabase(email, name, chat_history):
-    # Insert session data into Supabase table
-    data = {
-        "email": email,
-        "name": name if name else None,
-        "chat_history": json.dumps(chat_history)
-    }
-    
-    response = supabase.table('chat_sessions').insert(data).execute()
-    if response.status_code == 201:
-        st.success("Session data successfully saved to Supabase!")
-    else:
-        st.error("Error saving session data to Supabase.")
+    # Insert each question-answer pair as a new row in Supabase
+    for question, answer in chat_history:
+        data = {
+            "email": email,
+            "name": name if name else None,
+            "question": question,
+            "answer": answer,
+        }
+        response = supabase.table('chat_sessions').insert(data).execute()
+        if response.status_code != 201:
+            st.error(f"Error saving session data to Supabase: {response.error_message}")
+            return False
+    return True
 
 st.title("BDM Chatbot")
 st.write("Ask questions directly based on the preloaded BDM documents.")
@@ -236,8 +237,9 @@ if st.session_state["email_validated"]:
             }
             
             # Save session data to Supabase
-            save_session_to_supabase(email, name, st.session_state["chat_history"])
-
+            if save_session_to_supabase(email, name, st.session_state["chat_history"]):
+                st.success("Session data successfully saved to Supabase!")
+            
             # Allow the user to download session data as JSON when they say "stop"
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"session_data_{timestamp}.json"
