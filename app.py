@@ -479,6 +479,10 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from supabase import create_client, Client  # Import Supabase client
 
+# Allow dangerous deserialization if you're sure the data source is trusted
+st.set_option('server.allow_dangerous_deserialization', True)
+
+
 # Supabase credentials (get these from the Supabase dashboard)
 SUPABASE_URL = "https://armzsxwnhybsgedffijs.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybXpzeHduaHlic2dlZGZmaWpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMwODcxMzEsImV4cCI6MjA0ODY2MzEzMX0.g7Ty0qNFCVJiEp38IQ_Uw9yEn4jzA67XPsLCmQ8f26o"
