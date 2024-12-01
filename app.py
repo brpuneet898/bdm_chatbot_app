@@ -91,7 +91,7 @@ def create_vector_store(document_texts):
 
 # Email validation regex for the specified format
 def is_valid_email(email):
-    email_regex = r"^\d{2}f\d{8}@ds\.study\.iitm\.ac\.in$"
+    email_regex = r"^\d{2}f\d{7}@ds\.study\.iitm\.ac\.in$"
     return re.match(email_regex, email) is not None
 
 st.title("BDM Chatbot")
