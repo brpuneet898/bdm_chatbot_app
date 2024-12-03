@@ -156,28 +156,6 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from supabase import create_client, Client
 
-import streamlit_analytics
-
-# Your Google Analytics ID
-GA_ID = "G-HSVC2DMLZW"
-
-ga_script = f"""
-<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag() {{
-    dataLayer.push(arguments);
-  }}
-  gtag('js', new Date());
-  gtag('config', '{GA_ID}');
-</script>
-"""
-
-# Use st.markdown to inject the Google Analytics script into the page
-st.markdown(ga_script, unsafe_allow_html=True)
-
-streamlit_analytics.start_tracking()
-
 url = "https://armzsxwnhybsgedffijs.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybXpzeHduaHlic2dlZGZmaWpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMwODcxMzEsImV4cCI6MjA0ODY2MzEzMX0.g7Ty0qNFCVJiEp38IQ_Uw9yEn4jzA67XPsLCmQ8f26o"
 supabase: Client = create_client(url, key)
@@ -285,7 +263,6 @@ if st.session_state["email_validated"]:
                 st.write(f"Q{i}: {question}")
                 st.write(f"Chatbot: {reply}")
 
-streamlit_analytics.stop_tracking()
 
 # version 5 - added download feature - with custom embeedings that doesn't work
 
