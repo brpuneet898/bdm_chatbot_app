@@ -156,6 +156,8 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from supabase import create_client, Client
 
+from streamlit_analytics import st_analytics
+
 GA_ID = "G-HSVC2DMLZW"
 st_analytics(GA_ID=GA_ID)
 st_analytics.track_event("Page Opened", {"event": "Page Loaded"})
