@@ -160,7 +160,7 @@ google_analytics_script = f"""
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-HSVC2DMLZW"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
+  function gtag(){{dataLayer.push(arguments);}}
   gtag('js', new Date());
 
   gtag('config', 'G-HSVC2DMLZW');
