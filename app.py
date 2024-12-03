@@ -156,17 +156,14 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from supabase import create_client, Client
 
-GA_MEASUREMENT_ID = "G-HSVC2DMLZW"
-
 google_analytics_script = f"""
-<script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HSVC2DMLZW"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag() {{
-    dataLayer.push(arguments);
-  }}
+  function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', '{GA_MEASUREMENT_ID}');
+
+  gtag('config', 'G-HSVC2DMLZW');
 </script>
 """
 
