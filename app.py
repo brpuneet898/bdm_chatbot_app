@@ -158,9 +158,13 @@ from supabase import create_client, Client
 
 import streamlit_analytics
 
+# Your Google Analytics ID
 GA_ID = "G-HSVC2DMLZW"
-streamlit_analytics(GA_ID=GA_ID)
-streamlit_analytics.track_event("Page Opened", {"event": "Page Loaded"})
+
+# Track page load event using the context manager
+with streamlit_analytics.track():
+    # Track a page view event (you can optionally add a label or category)
+    streamlit_analytics.track_event("Page Opened", {"event": "Page Loaded"})
 
 url = "https://armzsxwnhybsgedffijs.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybXpzeHduaHlic2dlZGZmaWpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMwODcxMzEsImV4cCI6MjA0ODY2MzEzMX0.g7Ty0qNFCVJiEp38IQ_Uw9yEn4jzA67XPsLCmQ8f26o"
