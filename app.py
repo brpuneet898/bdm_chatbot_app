@@ -161,6 +161,21 @@ import streamlit_analytics
 # Your Google Analytics ID
 GA_ID = "G-HSVC2DMLZW"
 
+ga_script = f"""
+<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {{
+    dataLayer.push(arguments);
+  }}
+  gtag('js', new Date());
+  gtag('config', '{GA_ID}');
+</script>
+"""
+
+# Use st.markdown to inject the Google Analytics script into the page
+st.markdown(ga_script, unsafe_allow_html=True)
+
 with streamlit_analytics.track():
     st.write("GA Tracked.")
 
