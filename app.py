@@ -155,24 +155,6 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from supabase import create_client, Client
-import streamlit.components.v1 as components
-
-google_analytics_script = """
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HSVC2DMLZW"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-HSVC2DMLZW');
-</script>
-"""
-
-# Use Streamlit to inject the Google Analytics script
-components.html(google_analytics_script, height=0)
-
-
 
 url = "https://armzsxwnhybsgedffijs.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybXpzeHduaHlic2dlZGZmaWpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMwODcxMzEsImV4cCI6MjA0ODY2MzEzMX0.g7Ty0qNFCVJiEp38IQ_Uw9yEn4jzA67XPsLCmQ8f26o"
@@ -223,6 +205,7 @@ def save_session_to_supabase(email, name, chat_history):
 
 st.title("BDM Chatbot")
 st.write("Ask questions directly based on the preloaded BDM documents.")
+st.write("Note - Once your queries are complete, please put the last query as \"stop\".")
 
 model = load_model()
 document_texts = load_hidden_pdfs()
