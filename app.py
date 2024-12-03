@@ -176,8 +176,7 @@ ga_script = f"""
 # Use st.markdown to inject the Google Analytics script into the page
 st.markdown(ga_script, unsafe_allow_html=True)
 
-with streamlit_analytics.track():
-    st.write("GA Tracked.")
+streamlit_analytics.start_tracking()
 
 url = "https://armzsxwnhybsgedffijs.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybXpzeHduaHlic2dlZGZmaWpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMwODcxMzEsImV4cCI6MjA0ODY2MzEzMX0.g7Ty0qNFCVJiEp38IQ_Uw9yEn4jzA67XPsLCmQ8f26o"
@@ -286,6 +285,7 @@ if st.session_state["email_validated"]:
                 st.write(f"Q{i}: {question}")
                 st.write(f"Chatbot: {reply}")
 
+streamlit_analytics.stop_tracking()
 
 # version 5 - added download feature - with custom embeedings that doesn't work
 
