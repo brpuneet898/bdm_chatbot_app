@@ -183,7 +183,7 @@ def create_vector_store(document_texts):
 
 def is_valid_email(email):
     email_regex = r"^\d{2}f\d{7}@ds\.study\.iitm\.ac\.in$"
-    return re.match(email_regex, email) is not None
+    return re.match(email_regex, email) is not None or email == "nitin@ee.iitm.ac.in"
 
 # Save session data (question and answer pairs) to Supabase
 def save_session_to_supabase(email, name, chat_history):
